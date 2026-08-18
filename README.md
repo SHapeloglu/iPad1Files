@@ -1,19 +1,42 @@
 # iPad1Files
 
-iPad1Files is a lightweight shared file manager and common storage foundation for jailbroken iPad 1 devices running iOS 5.1.1.
+iPad1Files is the shared file-management backbone for the jailbroken iPad 1 application ecosystem running iOS 5.1.1.
 
-## Goal
+Its goal is broader than being an iFile-style browser: companion apps should share one storage contract, one set of filesystem rules, and one lightweight Objective-C integration layer.
 
-Provide one common filesystem layer for the iPad1 application family:
+## Ecosystem role
+
+Designed to serve:
 
 - iPad1PDFReader
 - iPad1FTPDownloader
 - iPad1VNC
-- future iPad1Media / iPad1Archive / iPad1Browser tools
+- future iPad1Media
+- future iPad1Archive
+- future iPad1Browser / network utilities
 
-## Shared storage
+## Compatibility
 
-The application creates:
+- Device: iPad 1
+- Architecture: armv7
+- Deployment target: iOS 5.1
+- Primary physical target: iOS 5.1.1
+- Build system: Theos
+- Language: Objective-C
+- Memory management: manual reference counting (`-fno-objc-arc`)
+- Frameworks: UIKit, Foundation, CoreGraphics
+- No Swift
+- Avoid APIs introduced after iOS 5 unless optional and runtime-guarded
+
+## Shared storage contract
+
+Canonical root:
+
+```text
+/var/mobile/Media/iPad1Files/
+```
+
+Standard layout:
 
 ```text
 /var/mobile/Media/iPad1Files/
@@ -29,70 +52,55 @@ The application creates:
 └── AppData/
 ```
 
-## v1.0.0-beta1 features
+Application-specific state belongs under:
 
-- Directory browser
-- Multi-selection mode
-- Copy to destination browser
-- Move to destination browser
-- Safe bulk delete confirmation
-- Favorites
-- Free/total disk space footer
-- Folder-first sorting
-- Create folder
-- Rename
-- Delete
-- File information
-- Current-folder search
-- Show/hide hidden files
-- Text preview
-- Image preview with zoom
-- PDF hand-off hook through `ipad1pdf://`
-- Common `iPad1FilesKit` headers
-- Shared storage bootstrap
-- File type detection
-- Recursive size calculation
-- Copy/move APIs with collision-safe destination names
+```text
+/var/mobile/Media/iPad1Files/AppData/<ApplicationName>/
+```
+
+## v1.0.0-beta1 implemented features
+
+- directory browser
+- folder-first sorting
+- current-folder search
+- create folder
+- rename
+- delete
+- file information
+- recursive folder-size calculation
+- show/hide hidden files
+- text preview
+- image preview with zoom
+- multi-selection mode
+- copy selected items
+- move selected items
+- destination-folder browser
+- safe bulk-delete confirmation
+- collision-safe destination naming such as `file (2).pdf`
+- persistent favorites
+- free/total disk-space footer
+- PDF Reader launch hook through `ipad1pdf://`
+- common application registry scaffold
+- shared `iPad1FilesKit` headers
+- shared storage bootstrap
 - URL scheme: `ipad1files://`
 
-## Build
+## Shared kit
 
-Requires a Theos toolchain capable of targeting iOS 5.1.
+Reusable components:
 
-```bash
-make clean
-make package FINALPACKAGE=1
+```text
+IP1FileItem
+IP1FileManager
+IP1FileTypeDetector
+IP1SharedStorage
+IP1AppLauncher
+IP1AppRegistry
+IP1FavoritesManager
+IP1DiskInfo
 ```
 
-To deploy to the iPad:
-
-```bash
-scp -o HostKeyAlgorithms=+ssh-rsa \
-    -o PubkeyAcceptedAlgorithms=+ssh-rsa \
-    packages/com.olap.ipad1files_1.0.0-beta1_iphoneos-arm.deb \
-    root@192.168.1.2:/var/mobile/
-```
-
-On the iPad:
-
-```bash
-ssh -o HostKeyAlgorithms=+ssh-rsa \
-    -o PubkeyAcceptedAlgorithms=+ssh-rsa \
-    root@192.168.1.2
-
-dpkg -i /var/mobile/com.olap.ipad1files_1.0.0-beta1_iphoneos-arm.deb
-killall SpringBoard
-```
-
-## Integration example
-
-Any iPad1 application can use the same path contract:
-
-```objc
-NSString *pdfFolder = @"/var/mobile/Media/iPad1Files/PDFs";
-```
-
-Or, when the shared kit is embedded:
+Example:
 
 ```objc
 #import "iPad1FilesKit.h"
@@ -102,16 +110,132 @@ NSArray *pdfs = [[IP1FileManager sharedManager]
     underPath:[[IP1SharedStorage sharedStorage] rootPath]];
 ```
 
-## PDF Reader URL contract
+## Companion-app integration
 
-iPad1Files attempts to launch:
+See `INTEGRATION.md` for the authoritative contracts.
+
+### iPad1PDFReader
+
+Current hand-off contract:
 
 ```text
-ipad1pdf://open?path=<percent-encoded-path>
+ipad1pdf://open?path=<percent-encoded-absolute-path>
 ```
 
-The PDF reader must add the `ipad1pdf` URL scheme and parse the `path` parameter for this integration to become active.
+The PDF Reader still needs to register this URL scheme and parse the `path` parameter before this integration is complete.
 
-## Status
+### iPad1FTPDownloader
 
-`1.0.0-beta1` is the first implementation scaffold. It is intentionally conservative for iPad 1 memory and iOS 5 compatibility.
+Target default destination:
+
+```text
+/var/mobile/Media/iPad1Files/Downloads/
+```
+
+### iPad1VNC
+
+Recommended shared application state:
+
+```text
+/var/mobile/Media/iPad1Files/AppData/iPad1VNC/
+├── profiles/
+├── screenshots/
+├── logs/
+└── transfers/
+```
+
+## Build
+
+Local project path:
+
+```text
+~/projects/iPad1Files-v1.0.0-beta1
+```
+
+Build:
+
+```bash
+cd ~/projects/iPad1Files-v1.0.0-beta1
+make clean
+rm -rf .theos
+make package FINALPACKAGE=1
+```
+
+Expected package:
+
+```text
+packages/com.olap.ipad1files_1.0.0-beta1_iphoneos-arm.deb
+```
+
+## Deploy to physical iPad
+
+Current iPad IP:
+
+```text
+192.168.1.100
+```
+
+Copy package:
+
+```bash
+scp \
+-o HostKeyAlgorithms=+ssh-rsa \
+-o PubkeyAcceptedAlgorithms=+ssh-rsa \
+packages/com.olap.ipad1files_1.0.0-beta1_iphoneos-arm.deb \
+root@192.168.1.100:/var/mobile/
+```
+
+Connect:
+
+```bash
+ssh \
+-o HostKeyAlgorithms=+ssh-rsa \
+-o PubkeyAcceptedAlgorithms=+ssh-rsa \
+root@192.168.1.100
+```
+
+Install on iPad:
+
+```bash
+dpkg -i /var/mobile/com.olap.ipad1files_1.0.0-beta1_iphoneos-arm.deb
+killall SpringBoard
+```
+
+## Repository
+
+```text
+https://github.com/SHapeloglu/iPad1Files
+branch: main
+initial beta1 commit: 0e66caf
+```
+
+## Current status
+
+`1.0.0-beta1` is implemented and pushed to GitHub. The complete local file workflow still needs systematic physical-device validation. Read `SESSION.md`, `TESTING.md`, and `INTEGRATION.md` before starting new feature work.
+
+## Roadmap
+
+### beta2
+
+- home/root shortcut screen
+- lightweight icons
+- Open With registry UI
+- real iPad1PDFReader URL receiver
+- iPad1FTPDownloader shared-download integration
+- iPad1VNC AppData integration
+- fixes found during physical-device regression testing
+
+### v1.1
+
+- HTTP download manager
+- ZIP create/extract
+- queued downloads
+
+### later
+
+- FTP
+- SFTP
+- WebDAV
+- SMB
+- media previews
+- network browser
