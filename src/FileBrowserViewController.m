@@ -4,6 +4,7 @@
 #import "IP1FileItem.h"
 #import "IP1FileTypeDetector.h"
 #import "IP1AppLauncher.h"
+#import "IP1AppRegistry.h"
 #import "IP1FavoritesManager.h"
 #import "IP1DiskInfo.h"
 #import "FavoritesViewController.h"
@@ -204,8 +205,9 @@
         return;
     }
 
-    if (type == IP1FileTypePDF && [IP1AppLauncher canOpenPDFReader]) {
-        [IP1AppLauncher openPDFReaderWithPath:item.path];
+    if ([IP1AppRegistry registrationForPath:item.path] &&
+        [IP1AppLauncher canOpenRegisteredAppForPath:item.path]) {
+        [IP1AppLauncher openRegisteredAppForPath:item.path];
         return;
     }
 
@@ -310,6 +312,15 @@
     [self reloadFiles];
 }
 
+- (NSString *)suggestedSharedFolderForItem:(IP1FileItem *)item {
+    NSString *ext = [[item.path pathExtension] lowercaseString];
+    if ([ext isEqualToString:@"pdf"]) return @"/var/mobile/Media/iPad1Files/PDFs";
+    if ([ext isEqualToString:@"jpg"] || [ext isEqualToString:@"jpeg"] || [ext isEqualToString:@"png"] || [ext isEqualToString:@"gif"]) return @"/var/mobile/Media/iPad1Files/Images";
+    if ([ext isEqualToString:@"mp3"] || [ext isEqualToString:@"m4a"] || [ext isEqualToString:@"aac"] || [ext isEqualToString:@"wav"]) return @"/var/mobile/Media/iPad1Files/Music";
+    if ([ext isEqualToString:@"zip"] || [ext isEqualToString:@"rar"] || [ext isEqualToString:@"7z"] || [ext isEqualToString:@"tar"] || [ext isEqualToString:@"gz"]) return @"/var/mobile/Media/iPad1Files/Archives";
+    return nil;
+}
+
 - (void)showActionsForItem:(IP1FileItem *)item {
     BOOL favorite = [[IP1FavoritesManager sharedManager] isFavorite:item.path];
 
@@ -324,6 +335,19 @@
                                               @"Sil",
                                               nil] autorelease];
 
+    NSDictionary *registration = [IP1AppRegistry registrationForPath:item.path];
+    NSString *appName = [registration objectForKey:@"name"];
+    if (appName) {
+        [sheet addButtonWithTitle:[NSString stringWithFormat:@"%@ ile Aç", appName]];
+        objc_setAssociatedObject(sheet, "IP1OpenRegistration", registration, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    }
+    if ([_path isEqualToString:@"/var/mobile/Media/iPad1Files/Downloads"]) {
+        NSString *destination = [self suggestedSharedFolderForItem:item];
+        if (destination) {
+            [sheet addButtonWithTitle:[NSString stringWithFormat:@"%@ klasörüne taşı", [destination lastPathComponent]]];
+            objc_setAssociatedObject(sheet, "IP1SuggestedFolder", destination, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+        }
+    }
     [sheet addButtonWithTitle:@"Vazgeç"];
     sheet.destructiveButtonIndex = 3;
     sheet.cancelButtonIndex = sheet.numberOfButtons - 1;
@@ -360,6 +384,21 @@
         FileInfoViewController *info =
             [[[FileInfoViewController alloc] initWithPath:item.path] autorelease];
         [self.navigationController pushViewController:info animated:YES];
+    } else if ([title hasSuffix:@" ile Aç"]) {
+        NSDictionary *registration = objc_getAssociatedObject(actionSheet, "IP1OpenRegistration");
+        if (![IP1AppLauncher openPath:item.path withRegistration:registration]) {
+            UIAlertView *alert = [[[UIAlertView alloc] initWithTitle:@"Uygulama açılamadı" message:@"Eşleşen uygulama kurulu değil veya URL scheme kullanılamıyor." delegate:nil cancelButtonTitle:@"Tamam" otherButtonTitles:nil] autorelease];
+            [alert show];
+        }
+    } else if ([title hasSuffix:@" klasörüne taşı"]) {
+        NSString *destination = objc_getAssociatedObject(actionSheet, "IP1SuggestedFolder");
+        NSError *moveError = nil;
+        if (![[IP1FileManager sharedManager] moveItemAtPath:item.path toDirectory:destination error:&moveError]) {
+            UIAlertView *alert = [[[UIAlertView alloc] initWithTitle:@"Taşıma başarısız" message:[moveError localizedDescription] delegate:nil cancelButtonTitle:@"Tamam" otherButtonTitles:nil] autorelease];
+            [alert show];
+        }
+        [self reloadFiles];
+        [self updateFooter];
     } else if ([title isEqualToString:@"Favorilere Ekle"] ||
                [title isEqualToString:@"Favorilerden Çıkar"]) {
         [[IP1FavoritesManager sharedManager] toggleFavorite:item.path];

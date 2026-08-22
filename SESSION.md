@@ -1,203 +1,70 @@
 # iPad1Files Session / New Chat Handoff
 
-## Read this first
+Date: 2026-08-18
 
-This file is the primary handoff document for a new chat or a new developer session.
-
-Do not assume beta1 is fully validated just because the code exists. The next job is physical-device validation, then companion-app integration.
-
-## Date
-
-2026-08-18
-
-## Repository
-
+Repo:
 ```text
 https://github.com/SHapeloglu/iPad1Files
 branch: main
-initial beta1 commit: 0e66caf
 ```
 
-## Local project
-
+Known commits before this update:
 ```text
-user/host: yeliz@DESKTOP-CSC9788
-path: ~/projects/iPad1Files-v1.0.0-beta1
+0e66caf beta1 source foundation
+12b7525 Complete new-chat handoff documentation
 ```
 
-Important: do not confuse this with the unrelated Contabo/VPS host `root@vmi3389964`.
-
-## Device
-
+Local:
 ```text
-Device: iPad 1
-Target OS: iOS 5.1.1
-Current IP: 192.168.1.100
-SSH user: root
+yeliz@DESKTOP-CSC9788
+~/projects/iPad1Files-v1.0.0-beta1
 ```
 
-Legacy SSH options:
-
+Physical:
 ```text
--o HostKeyAlgorithms=+ssh-rsa
--o PubkeyAcceptedAlgorithms=+ssh-rsa
+iPad 1 / 256 MB / iOS 5.1.1 / armv7 / non-ARC
+IP: 192.168.1.100
 ```
 
-## Current release
+Locked decision: iPad1Files is the shared filesystem backbone, not a monolithic FTP/PDF/network app.
 
-```text
-1.0.0-beta1
-Package: com.olap.ipad1files
-Architecture: iphoneos-arm
-Build arch: armv7
-Deployment target: iOS 5.1
-Memory model: non-ARC / MRC
-```
+Owns: browser, copy/move/rename/delete, multi-select, search, favorites, disk info, preview, shared folders, collision-safe naming, Open With, URL hand-off.
 
-## Why this project exists
+Does NOT own: FTP/SFTP/SMB/WebDAV engines, PDF annotation/search/reflow/page editing, OCR, AI/ML, background indexing.
 
-iPad1Files is intended to become the shared filesystem backbone for the iPad1 application family.
-
-Existing integration targets:
-
-```text
-iPad1PDFReader
-iPad1FTPDownloader
-iPad1VNC
-```
-
-The goal is to avoid each app inventing separate storage locations and file-operation code.
-
-## Canonical shared root
-
+Canonical:
 ```text
 /var/mobile/Media/iPad1Files
 ```
 
-Directory contract:
-
+Flow:
 ```text
-Downloads/
-Documents/
-PDFs/
-Images/
-Music/
-Videos/
-Archives/
-Shared/
-Temp/
-AppData/
+iPad1FTPDownloader -> Shared Downloads -> iPad1Files -> Open With -> iPad1PDFReader
 ```
 
-## Implemented in beta1
-
-- browser UI
-- folder navigation
-- folder-first sorting
-- search in current folder
-- create folder
-- rename
-- delete
-- file information
-- recursive folder size
-- hidden-file toggle
-- text preview
-- image preview
-- multi-select
-- copy
-- move
-- destination picker
-- bulk-delete confirmation
-- collision-safe naming
-- favorites
-- disk free/total display
-- PDF Reader URL hand-off hook
-- app registry scaffold
-- reusable iPad1FilesKit headers
-
-## Not yet considered proven
-
-The following must be physically validated on the iPad:
-
-- all copy/move/delete flows
-- recursive folder behavior
-- Turkish-character paths
-- duplicate-name handling
-- favorites persistence
-- large directories
-- large-image memory behavior
-- permissions on shared root
-- root-deletion protection
-- PDF URL hand-off in real companion app
-
-Use `TESTING.md`.
-
-## Build
-
-```bash
-cd ~/projects/iPad1Files-v1.0.0-beta1
-make clean
-rm -rf .theos
-make package FINALPACKAGE=1
-```
-
-Expected package:
-
+PDF:
 ```text
-packages/com.olap.ipad1files_1.0.0-beta1_iphoneos-arm.deb
+.pdf -> iPad1PDFReader
+ipad1pdf://open?path=<percent-encoded-absolute-path>
 ```
 
-## Deploy
-
-```bash
-scp \
--o HostKeyAlgorithms=+ssh-rsa \
--o PubkeyAcceptedAlgorithms=+ssh-rsa \
-packages/com.olap.ipad1files_1.0.0-beta1_iphoneos-arm.deb \
-root@192.168.1.100:/var/mobile/
-```
-
-Then:
-
-```bash
-ssh \
--o HostKeyAlgorithms=+ssh-rsa \
--o PubkeyAcceptedAlgorithms=+ssh-rsa \
-root@192.168.1.100
-```
-
-On iPad:
-
-```bash
-dpkg -i /var/mobile/com.olap.ipad1files_1.0.0-beta1_iphoneos-arm.deb
-killall SpringBoard
-```
-
-## Integration plan
-
-Read `INTEGRATION.md`.
-
-Priority order:
-
-1. iPad1PDFReader
-2. iPad1FTPDownloader
-3. iPad1VNC
-
-Do not add SFTP/SMB/WebDAV before stabilizing local storage and these three integrations.
+Current source update: generic registry Open With, FileBrowser registry dispatch, user-controlled Downloads classification, scope cleanup. Physical test pending.
 
 ## Immediate next action
+1. Apply/push this update.
+2. Clean build.
+3. Fix iOS5/MRC compile issues if any.
+4. Install to 192.168.1.100.
+5. Complete TESTING.md.
+6. Update SESSION with results.
+7. Then companion repos: PDFReader receiver, FTPDownloader shared Downloads, VNC AppData.
 
-Run the beta1 physical-device checklist in `TESTING.md`.
-
-If a compile/runtime bug appears, fix it first, update this file and `TESTING.md`, then commit.
-
-## New chat instruction
-
-A new chat should start with something equivalent to:
-
+## New chat bootstrap
 ```text
-We are continuing SHapeloglu/iPad1Files.
-Read SESSION.md, ARCHITECTURE.md, INTEGRATION.md, TESTING.md,
-TASKS.md, CLAUDE.md and AGENTS.md before changing code.
-Continue from the Immediate next action in SESSION.md.
+https://github.com/SHapeloglu/iPad1Files projesine devam ediyoruz.
+Önce SESSION.md, ARCHITECTURE.md, INTEGRATION.md, TESTING.md,
+TASKS.md, CLAUDE.md, AGENTS.md ve README.md dosyalarını oku.
+SESSION.md içindeki "Immediate next action" bölümünden devam et.
+Mevcut mimari kararları bozma.
+iPad 1 / 256 MB RAM / iOS 5.1.1 / armv7 / non-ARC kısıtlarından sapma.
 ```
