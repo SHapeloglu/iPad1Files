@@ -1,177 +1,66 @@
 # iPad1Files — Authoritative Session / New Chat Handoff
 
-> **This file is the authoritative handoff document for this repository.**
->
-> A new chat or coding agent should be able to continue from this file alone.
-> If another Markdown file conflicts with `SESSION.md`, **`SESSION.md` takes precedence**
-> unless this file is explicitly updated later.
+> Bu dosya repository için authoritative handoff belgesidir. Başka bir Markdown dosyasıyla çelişirse `SESSION.md` esas alınır.
 
-## 1. Project identity
+## Project
 
 Repository:
-
 ```text
 https://github.com/SHapeloglu/iPad1Files
 ```
 
 Branch:
-
 ```text
 main
 ```
 
-Current known HEAD:
-
+Validated source commit before this docs update:
 ```text
-c1518f1 Align iPad1Files with shared filesystem integration policy
+3c5bce9 Add safe ZIP archive support and file manager enhancements
 ```
 
-Earlier important commits:
-
-```text
-12b7525 Complete new-chat handoff documentation
-0e66caf Add iPad1Files v1.0.0-beta1 shared filesystem foundation
-```
-
-Local development machine:
-
-```text
-yeliz@DESKTOP-CSC9788
-```
-
-Local checkout:
-
+Local:
 ```text
 ~/projects/iPad1Files-v1.0.0-beta1
 ```
 
-Do not confuse this project with unrelated work on the Contabo VPS.
-
-## 2. Hard platform constraints
-
-These constraints must not be changed:
+## Hard constraints
 
 ```text
-Device: iPad 1
-RAM: 256 MB
-OS: iOS 5.1.1
-Architecture: armv7
-Build system: Theos
-Language: Objective-C
-Memory management: non-ARC / MRC
+iPad 1
+256 MB RAM
+iOS 5.1.1
+armv7
+Objective-C
+Theos
+non-ARC / MRC
 ```
 
-Rules:
+No Swift, no modern-only iOS APIs, no ARC migration. Physical device behavior is final authority.
 
-- no Swift
-- no migration to modern-only iOS APIs
-- prefer UIKit/Foundation APIs available on iOS 5
-- preserve MRC ownership/release discipline
-- keep memory use conservative
-- physical-device behavior is the final authority
-
-## 3. Physical device
-
-Current iPad IP:
+## Physical device
 
 ```text
-192.168.1.100
+IP: 192.168.1.100
+SSH user: root
 ```
 
-SSH user:
-
-```text
-root
-```
-
-Legacy OpenSSH compatibility flags:
-
+Legacy SSH flags:
 ```text
 -o HostKeyAlgorithms=+ssh-rsa
 -o PubkeyAcceptedAlgorithms=+ssh-rsa
 ```
 
-## 4. Project mission
+## Mission
 
-iPad1Files is the **shared filesystem backbone** of the iPad1 application family.
+iPad1Files is the shared filesystem backbone of the iPad1 app family.
 
-It is not intended to become a monolithic application containing every specialist engine.
-
-It owns:
-
-```text
-file/folder browser
-copy
-move
-rename
-delete
-multi-select
-search
-favorites
-disk information
-lightweight preview
-shared folder management
-collision-safe naming
-Open With
-application URL hand-off
-```
-
-It does NOT own:
-
-```text
-FTP transport engine
-FTP upload/download implementation
-SFTP client
-SMB client
-WebDAV client
-PDF annotation engine
-PDF search/reflow engine
-PDF page editing
-OCR
-AI/ML
-background filesystem indexing
-```
-
-## 5. Companion application responsibilities
-
-### iPad1FTPDownloader
-
-Owns FTP/network transfer responsibilities.
-
-Default shared-download target:
-
-```text
-/var/mobile/Media/iPad1Files/Downloads
-```
-
-iPad1Files must not import or duplicate the downloaded file.
-
-### iPad1PDFReader
-
-Owns PDF rendering and PDF-specific features.
-
-iPad1Files only hands off the existing absolute file path.
-
-### iPad1VNC
-
-Owns VNC/remote-desktop responsibilities.
-
-Shareable VNC state may use:
-
-```text
-/var/mobile/Media/iPad1Files/AppData/iPad1VNC
-```
-
-## 6. Canonical shared filesystem
-
-Stable ecosystem contract:
-
+Canonical root:
 ```text
 /var/mobile/Media/iPad1Files
 ```
 
-Standard children:
-
+Children:
 ```text
 Downloads/
 Documents/
@@ -185,164 +74,148 @@ Temp/
 AppData/
 ```
 
-App-specific state belongs under:
-
+Owns:
 ```text
-/var/mobile/Media/iPad1Files/AppData/<ApplicationName>/
+browser
+copy/move/rename/delete
+multi-select/select-all
+search/favorites/disk info
+folder picker
+path navigation
+lightweight preview/editing
+collision-safe naming
+Open With / URL hand-off
+ZIP archive management
 ```
 
-## 7. Intended ecosystem flow
-
+Does not own:
 ```text
-iPad1FTPDownloader
-       ↓
-Shared Downloads
-       ↓
-iPad1Files
-       ↓
-Open With
-       ↓
-iPad1PDFReader
+FTP/SFTP/SMB/WebDAV engines
+PDF rendering/annotation/search/reflow engines
+OCR
+AI/ML
+background filesystem indexing
 ```
 
-Use the same physical file whenever possible.
+## Companion integration
 
-## 8. Open With architecture
-
-`IP1AppRegistry` is the authoritative:
-
-```text
-extension → application
-```
-
-mapping layer.
-
-Initial mapping:
-
-```text
-.pdf → iPad1PDFReader
-```
-
-`IP1AppLauncher` performs URL hand-off.
-
-PDF URL contract:
-
-```text
-ipad1pdf://open?path=<percent-encoded-absolute-path>
-```
-
-Rules:
-
-- detect extension
-- resolve app through `IP1AppRegistry`
-- hand off through `IP1AppLauncher`
-- send the existing absolute path
-- do not copy a PDF merely to open it
-
-Current status:
-
-- generic registry-based hand-off exists in iPad1Files source
-- `.pdf → iPad1PDFReader` is the first registration
-- iPad1PDFReader receiver still needs to be completed/verified in its own repo
-
-## 9. Downloads classification policy
-
-For files directly inside:
-
+FTPDownloader:
 ```text
 /var/mobile/Media/iPad1Files/Downloads
 ```
 
-iPad1Files may offer explicit user-controlled moves such as:
-
+PDF:
 ```text
-.pdf               → PDFs/
-.jpg/.jpeg/.png    → Images/
-.mp3/.m4a/.aac/.wav → Music/
-.zip/.rar/.7z/.tar/.gz → Archives/
+.pdf -> iPad1PDFReader
+ipad1pdf://open?path=<percent-encoded-absolute-path>
 ```
 
-Never auto-move downloaded files.
+Use the same physical file whenever possible.
 
-## 10. Implemented beta1 capabilities
-
-Current source includes:
+## Current file-manager capabilities
 
 - shared storage bootstrap
-- file/folder browser
-- folder-first sorting
-- create folder
-- rename
-- delete
-- file information
+- browser
+- full path display
+- root navigation to `/`
+- copy/move/rename/delete
+- multi-select and `Tümünü Seç`
 - current-folder search
 - hidden-file toggle
-- text preview
-- image preview with zoom
-- recursive folder size
-- multi-selection
-- copy workflow
-- move workflow
-- destination-folder picker
-- safe bulk-delete confirmation
-- collision-safe destination naming
-- favorites persistence
-- free/total disk-space footer
-- `IP1AppRegistry`
-- `IP1AppLauncher`
-- generic registry-based Open With dispatch
-- `.pdf → iPad1PDFReader` mapping
-- user-controlled Downloads classification shortcuts
-- shared iPad1FilesKit headers
+- favorites
+- disk footer
+- text/image preview
+- lightweight text edit/save in normal areas
+- create empty text file
+- sort by name/date/size
+- collision-safe `(2)`, `(3)` naming
+- normal overwrite/new-name/cancel behavior
+- protected system areas: no select-all, no overwrite, destructive warnings
+- critical root delete/rename protection
+- Open With registry
+- user-controlled Downloads classification
 
-## 11. Not yet considered proven
+## ZIP Phase 1 architecture
 
-Do not claim these are fully working until physical-device testing confirms them:
-
-- clean build after latest integration-policy source changes
-- copy/move/delete regression status
-- recursive folder operations
-- Turkish-character paths
-- collision-safe naming on device
-- favorites persistence
-- large directory performance
-- large image memory behavior
-- root-deletion protection
-- Open With fallback behavior
-- PDFReader receiver hand-off
-- Downloads classification shortcuts
-- absence of unexpected auto-move behavior
-
-## 12. Memory policy
-
-Safe:
-
+Modules:
 ```text
-list only active folder
-extension-based type detection
-small metadata objects
-URL hand-off
+ArchiveManager
+ArchiveViewController
+src/minizip/
 ```
 
-Use care:
+Implementation:
+- classic MiniZip bundled into app
+- SDK `libz`
+- no runtime dependency on device `/usr/bin/zip`, `/usr/bin/unzip`, or `libzip`
+- 32 KB streaming buffer
+- entry-by-entry extraction
+- no whole ZIP in RAM
+- controlled autorelease pools
 
+Supports:
 ```text
-very large directories
-large image preview
-recursive size calculation
+ZIP content listing
+Extract All -> here
+Extract All -> another folder using existing Folder Picker
+multi-select -> Create ZIP
+reopen/extract ZIPs created by iPad1Files
 ```
 
-Do not add:
+Safety:
+- ZIP Slip/path traversal check
+- absolute path rejection
+- symlink rejection
+- CRC validation
+- disk-space pre-check
+- collision-safe extraction root
+- encrypted ZIP unsupported
+- ZIP64 unsupported in Phase 1
 
-```text
-large thumbnail caches
-whole-filesystem trees in RAM
-background indexing
-OCR
-AI/ML
-```
+## Physical PASS
 
-## 13. Build
+Verified on physical iPad 1:
+- clean armv7 build
+- package install
+- app launch
+- copy/move/delete
+- multi-select
+- `Tümünü Seç`
+- root navigation
+- protected-area select-all hidden
+- normal collision overwrite/new-name
+- protected destination overwrite absent
+- ZIP content screen
+- ZIP list
+- Extract All here
+- repeated extraction -> `(2)`
+- Extract All via Folder Picker
+- multi-select ZIP creation
+- created ZIP reopen
+- created ZIP extraction
+- core file-manager regression after ZIP integration
+
+## Not yet proven
+
+- Turkish ZIP filenames/paths
+- corrupt ZIP
+- truncated ZIP
+- explicit malicious `../` ZIP
+- explicit absolute-path ZIP
+- explicit symlink ZIP
+- insufficient disk space
+- many small entries
+- large single entry
+- memory pressure
+- ZIP Phase 2: single-file extraction
+- progress UI
+- cancel support
+- encrypted ZIP
+- ZIP64
+- large directory/image stress
+- PDFReader receiver absolute-path hand-off
+
+## Build
 
 ```bash
 cd ~/projects/iPad1Files-v1.0.0-beta1
@@ -351,145 +224,56 @@ rm -rf .theos
 make package FINALPACKAGE=1
 ```
 
-After building:
-
-```bash
-ls -lh packages/
-```
-
-Use the exact generated `.deb` filename.
-
-## 14. Deploy
-
-Example:
-
-```bash
-scp -o HostKeyAlgorithms=+ssh-rsa -o PubkeyAcceptedAlgorithms=+ssh-rsa packages/<EXACT_DEB_FILENAME> root@192.168.1.100:/var/mobile/
-```
-
-SSH:
-
-```bash
-ssh -o HostKeyAlgorithms=+ssh-rsa -o PubkeyAcceptedAlgorithms=+ssh-rsa root@192.168.1.100
-```
-
-On iPad:
-
-```bash
-dpkg -i /var/mobile/<EXACT_DEB_FILENAME>
-killall SpringBoard
-```
-
-If needed:
-
-```bash
-su mobile -c "/usr/bin/uicache"
-```
-
-## 15. Git hygiene
+## Git hygiene
 
 Never commit:
-
 ```text
 .theos/
 packages/
 *.deb
 obj/
 *.dSYM/
+local helper patch scripts
 ```
 
-Before committing:
-
+Before commit:
 ```bash
 git status -sb
 git diff --check
 ```
 
-Do not stage unrelated files.
+## Immediate next action
 
-## 16. Current repository state
-
-Latest known pushed source commit:
-
-```text
-c1518f1 Align iPad1Files with shared filesystem integration policy
-```
-
-That commit introduced/confirmed:
-
-- generic registry-based Open With
-- FileBrowser registry dispatch
-- user-controlled Downloads classification
-- iPad1Files scope cleanup
-
-The changes are committed and pushed, but not yet physically validated.
-
-## 17. Immediate next action
-
-Start here in the next chat:
-
-1. Enter the real local repo:
-
+1. Read this file first.
+2. Verify:
 ```bash
 cd ~/projects/iPad1Files-v1.0.0-beta1
-```
-
-2. Verify Git state:
-
-```bash
 git status -sb
-git log -3 --oneline
+git log -5 --oneline
 ```
-
-3. Clean-build current `main`:
-
-```bash
-make clean
-rm -rf .theos
-make package FINALPACKAGE=1
-```
-
-4. If compilation fails, fix only the iOS 5 / armv7 / MRC compatibility problem without changing the architecture.
-
-5. Inspect the exact package:
-
-```bash
-ls -lh packages/
-```
-
-6. Install on physical iPad `192.168.1.100`.
-
-7. Run beta1 regression tests, especially:
-
+3. Run safe ZIP Phase 1 edge/security tests on physical iPad:
 ```text
-copy/move/delete
-multi-select
-favorites
-Turkish paths
-collision naming
-large directory
-large image
-Open With fallback
-Downloads classification
+Turkish filenames
+corrupt/truncated ZIP
+../ traversal ZIP
+absolute-path ZIP
+symlink ZIP
+many small entries
+large single entry
+insufficient disk space
+memory pressure
 ```
-
-8. Record actual pass/fail results in this `SESSION.md`.
-
-9. Commit and push stabilization fixes/results.
-
-10. Only after iPad1Files beta1 is stable, continue companion-app integration in this order:
-
+4. Record actual PASS/FAIL in `SESSION.md` and `TESTING.md`.
+5. Only after Phase 1 is stable, begin Phase 2:
 ```text
-1. iPad1PDFReader — register ipad1pdf and open absolute path
-2. iPad1FTPDownloader — use shared Downloads
-3. iPad1VNC — adopt appropriate AppData/iPad1VNC paths
+single-file extract
+progress UI
+cancel support
 ```
+6. Preserve existing file-manager regression behavior.
+7. Do not add FTP/SFTP/SMB/WebDAV engines to iPad1Files.
 
-Do not start FTP/SFTP/SMB/WebDAV engine development inside iPad1Files.
-
-## 18. New chat bootstrap
-
-For a new chat, this message alone should be enough:
+## New chat bootstrap
 
 ```text
 https://github.com/SHapeloglu/iPad1Files
@@ -498,7 +282,8 @@ SESSION.md dosyasını oku.
 SESSION.md bu proje için authoritative handoff belgesidir.
 Başka bir MD dosyasıyla çelişirse SESSION.md'yi esas al.
 "Immediate next action" bölümünden devam et.
+Güncel main branch ve kaynak kodu da kontrol et.
 Mevcut mimari kararları bozma.
-iPad 1 / 256 MB RAM / iOS 5.1.1 / armv7 / non-ARC kısıtlarından sapma.
+iPad 1 / 256 MB RAM / iOS 5.1.1 / armv7 / Objective-C / Theos / non-ARC-MRC sınırlarından sapma.
 Fiziksel cihazda doğrulanmamış özellikleri çalışıyor kabul etme.
 ```
