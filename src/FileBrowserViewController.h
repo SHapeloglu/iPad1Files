@@ -9,8 +9,10 @@
     UISearchBar *_searchBar;
     BOOL _showHidden;
     BOOL _selectionMode;
+    NSInteger _sortMode;
     NSMutableArray *_selectedPaths;
     NSString *_pendingOperation;
+    NSString *_pendingDestination;
 }
 
 - (id)initWithPath:(NSString *)path;

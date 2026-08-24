@@ -11,6 +11,8 @@
 #import "FileInfoViewController.h"
 #import "TextViewerViewController.h"
 #import "ImageViewerViewController.h"
+#import "ArchiveViewController.h"
+#import "ArchiveManager.h"
 
 @implementation FileBrowserViewController
 
@@ -29,10 +31,29 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
 
-    _searchBar = [[UISearchBar alloc] initWithFrame:CGRectMake(0, 0, 320, 44)];
+    CGFloat width = self.tableView.bounds.size.width;
+
+    UIView *header =
+        [[[UIView alloc] initWithFrame:CGRectMake(0, 0, width, 68)] autorelease];
+    header.autoresizingMask = UIViewAutoresizingFlexibleWidth;
+
+    UILabel *pathLabel =
+        [[[UILabel alloc] initWithFrame:CGRectMake(10, 2, width - 20, 22)] autorelease];
+    pathLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth;
+    pathLabel.font = [UIFont systemFontOfSize:11.0];
+    pathLabel.textColor = [UIColor grayColor];
+    pathLabel.backgroundColor = [UIColor clearColor];
+    pathLabel.lineBreakMode = UILineBreakModeMiddleTruncation;
+    pathLabel.text = [_path length] ? _path : @"/";
+    [header addSubview:pathLabel];
+
+    _searchBar = [[UISearchBar alloc] initWithFrame:CGRectMake(0, 24, width, 44)];
+    _searchBar.autoresizingMask = UIViewAutoresizingFlexibleWidth;
     _searchBar.delegate = self;
     _searchBar.placeholder = @"Bu klasörde ara";
-    self.tableView.tableHeaderView = _searchBar;
+    [header addSubview:_searchBar];
+
+    self.tableView.tableHeaderView = header;
 
     [self configureNavigation];
     [self reloadFiles];
@@ -58,7 +79,18 @@
                                              style:UIBarButtonItemStyleDone
                                             target:self
                                             action:@selector(showSelectionActions)] autorelease];
-        self.navigationItem.rightBarButtonItems = [NSArray arrayWithObject:done];
+
+        if (![[IP1FileManager sharedManager] isProtectedSystemDirectory:_path]) {
+            UIBarButtonItem *selectAll =
+                [[[UIBarButtonItem alloc] initWithTitle:@"Tümünü Seç"
+                                                 style:UIBarButtonItemStylePlain
+                                                target:self
+                                                action:@selector(selectAllItems)] autorelease];
+            self.navigationItem.rightBarButtonItems =
+                [NSArray arrayWithObjects:done, selectAll, nil];
+        } else {
+            self.navigationItem.rightBarButtonItems = [NSArray arrayWithObject:done];
+        }
     } else {
         self.navigationItem.leftBarButtonItem = nil;
 
@@ -117,9 +149,15 @@
     label.font = [UIFont systemFontOfSize:12.0];
     label.textColor = [UIColor grayColor];
     label.backgroundColor = [UIColor clearColor];
-    label.text = [NSString stringWithFormat:@"Boş: %@ / Toplam: %@",
-                  [IP1DiskInfo formattedBytes:free],
-                  [IP1DiskInfo formattedBytes:total]];
+    if ([[IP1FileManager sharedManager] isProtectedSystemDirectory:_path]) {
+        label.text = [NSString stringWithFormat:@"Korumalı sistem alanı • Boş: %@ / Toplam: %@",
+                      [IP1DiskInfo formattedBytes:free],
+                      [IP1DiskInfo formattedBytes:total]];
+    } else {
+        label.text = [NSString stringWithFormat:@"Boş: %@ / Toplam: %@",
+                      [IP1DiskInfo formattedBytes:free],
+                      [IP1DiskInfo formattedBytes:total]];
+    }
     self.tableView.tableFooterView = label;
 }
 
@@ -205,6 +243,14 @@
         return;
     }
 
+    if (type == IP1FileTypeArchive &&
+        [[item.path pathExtension] caseInsensitiveCompare:@"zip"] == NSOrderedSame) {
+        ArchiveViewController *archive =
+            [[[ArchiveViewController alloc] initWithZipPath:item.path] autorelease];
+        [self.navigationController pushViewController:archive animated:YES];
+        return;
+    }
+
     if ([IP1AppRegistry registrationForPath:item.path] &&
         [IP1AppLauncher canOpenRegisteredAppForPath:item.path]) {
         [IP1AppLauncher openRegisteredAppForPath:item.path];
@@ -233,8 +279,19 @@
 - (void)cancelSelection {
     _selectionMode = NO;
     [_selectedPaths removeAllObjects];
-    self.title = [_path lastPathComponent];
+    self.title = ([[_path lastPathComponent] length] > 0) ? [_path lastPathComponent] : @"Files";
     [self configureNavigation];
+    [self.tableView reloadData];
+}
+
+- (void)selectAllItems {
+    if ([[IP1FileManager sharedManager] isProtectedSystemDirectory:_path]) return;
+
+    [_selectedPaths removeAllObjects];
+    for (IP1FileItem *item in [self displayItems]) {
+        [_selectedPaths addObject:item.path];
+    }
+    self.title = [NSString stringWithFormat:@"%lu seçili", (unsigned long)[_selectedPaths count]];
     [self.tableView reloadData];
 }
 
@@ -246,21 +303,18 @@
                                      delegate:self
                             cancelButtonTitle:nil
                        destructiveButtonTitle:@"Sil"
-                            otherButtonTitles:@"Kopyala", @"Taşı", nil] autorelease];
+                            otherButtonTitles:@"Kopyala", @"Taşı", @"ZIP Oluştur", nil] autorelease];
     [sheet addButtonWithTitle:@"Vazgeç"];
     sheet.cancelButtonIndex = sheet.numberOfButtons - 1;
     objc_setAssociatedObject(sheet, "IP1SelectionSheet", @"YES", OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     [sheet showInView:self.view];
 }
 
-- (void)startDestinationOperation:(NSString *)operation {
-    [_pendingOperation release];
-    _pendingOperation = [operation copy];
-
+- (void)presentDestinationPicker {
     FolderPickerViewController *picker =
         [[[FolderPickerViewController alloc] initWithPath:@"/var/mobile/Media/iPad1Files"] autorelease];
     picker.delegate = self;
-    picker.actionTitle = [operation isEqualToString:@"copy"] ? @"Buraya Kopyala" : @"Buraya Taşı";
+    picker.actionTitle = [_pendingOperation isEqualToString:@"copy"] ? @"Buraya Kopyala" : @"Buraya Taşı";
 
     UINavigationController *nav =
         [[[UINavigationController alloc] initWithRootViewController:picker] autorelease];
@@ -274,21 +328,57 @@
     [self presentModalViewController:nav animated:YES];
 }
 
+- (void)startDestinationOperation:(NSString *)operation {
+    [_pendingOperation release];
+    _pendingOperation = [operation copy];
+
+    if ([operation isEqualToString:@"move"] &&
+        [[IP1FileManager sharedManager] isProtectedSystemDirectory:_path]) {
+        UIAlertView *alert =
+            [[[UIAlertView alloc] initWithTitle:@"Sistem Alanından Taşıma"
+                                        message:@"Bu işlem seçilen sistem öğelerini mevcut konumlarından kaldırır. Devam etmek istediğinizden emin olun."
+                                       delegate:self
+                              cancelButtonTitle:@"Vazgeç"
+                              otherButtonTitles:@"Devam", nil] autorelease];
+        alert.tag = 201;
+        [alert show];
+        return;
+    }
+
+    [self presentDestinationPicker];
+}
+
 - (void)dismissPicker {
     [self dismissModalViewControllerAnimated:YES];
 }
 
-- (void)folderPicker:(FolderPickerViewController *)picker didChoosePath:(NSString *)path {
-    (void)picker;
+- (BOOL)pendingTransferHasCollisionAtPath:(NSString *)path {
+    for (NSString *source in _selectedPaths) {
+        if ([[IP1FileManager sharedManager] itemExistsAtDestinationForSource:source
+                                                                   directory:path]) {
+            return YES;
+        }
+    }
+    return NO;
+}
+
+- (void)performPendingTransferToPath:(NSString *)path
+                      conflictPolicy:(IP1FileConflictPolicy)policy {
     NSError *error = nil;
     BOOL ok = YES;
 
     for (NSString *source in _selectedPaths) {
         BOOL itemOK;
         if ([_pendingOperation isEqualToString:@"copy"]) {
-            itemOK = [[IP1FileManager sharedManager] copyItemAtPath:source toDirectory:path error:&error];
+            itemOK = [[IP1FileManager sharedManager] copyItemAtPath:source
+                                                       toDirectory:path
+                                                    conflictPolicy:policy
+                                                             error:&error];
         } else {
-            itemOK = [[IP1FileManager sharedManager] moveItemAtPath:source toDirectory:path error:&error];
+            itemOK = [[IP1FileManager sharedManager] moveItemAtPath:source
+                                                       toDirectory:path
+                                                    conflictPolicy:policy
+                                                             error:&error];
         }
         if (!itemOK) {
             ok = NO;
@@ -310,6 +400,40 @@
 
     [self cancelSelection];
     [self reloadFiles];
+    [self updateFooter];
+}
+
+- (void)folderPicker:(FolderPickerViewController *)picker didChoosePath:(NSString *)path {
+    (void)picker;
+
+    [_pendingDestination release];
+    _pendingDestination = [path copy];
+
+    if (![self pendingTransferHasCollisionAtPath:path]) {
+        [self performPendingTransferToPath:path conflictPolicy:IP1FileConflictPolicyUnique];
+        return;
+    }
+
+    BOOL protectedDestination =
+        [[IP1FileManager sharedManager] isProtectedSystemDirectory:path];
+
+    UIAlertView *alert;
+    if (protectedDestination) {
+        alert = [[[UIAlertView alloc] initWithTitle:@"Korumalı Sistem Alanı"
+                                           message:@"Aynı isimli öğe var. Sistem alanında üzerine yazma kapalıdır; yalnızca yeni adla oluşturabilirsiniz."
+                                          delegate:self
+                                 cancelButtonTitle:@"Vazgeç"
+                                 otherButtonTitles:@"Yeni Adla Oluştur", nil] autorelease];
+        alert.tag = 301;
+    } else {
+        alert = [[[UIAlertView alloc] initWithTitle:@"Aynı İsimli Öğe Var"
+                                           message:@"Mevcut öğenin üzerine yazabilir veya (2), (3)… şeklinde yeni bir ad oluşturabilirsiniz."
+                                          delegate:self
+                                 cancelButtonTitle:@"Vazgeç"
+                                 otherButtonTitles:@"Yeni Adla Oluştur", @"Üzerine Yaz", nil] autorelease];
+        alert.tag = 300;
+    }
+    [alert show];
 }
 
 - (NSString *)suggestedSharedFolderForItem:(IP1FileItem *)item {
@@ -361,10 +485,16 @@
 
     if (objc_getAssociatedObject(actionSheet, "IP1SelectionSheet")) {
         if ([title isEqualToString:@"Sil"]) {
+            BOOL protectedArea =
+                [[IP1FileManager sharedManager] isProtectedSystemDirectory:_path];
+            NSString *message = protectedArea
+                ? [NSString stringWithFormat:@"UYARI: Korumalı sistem alanındaki %lu öğe kalıcı olarak silinecek. Bu işlem cihazın çalışmasını etkileyebilir.",
+                   (unsigned long)[_selectedPaths count]]
+                : [NSString stringWithFormat:@"%lu öğe kalıcı olarak silinsin mi?",
+                   (unsigned long)[_selectedPaths count]];
             UIAlertView *alert =
-                [[[UIAlertView alloc] initWithTitle:@"Toplu Silme"
-                                            message:[NSString stringWithFormat:@"%lu öğe kalıcı olarak silinsin mi?",
-                                                     (unsigned long)[_selectedPaths count]]
+                [[[UIAlertView alloc] initWithTitle:protectedArea ? @"SİSTEM ALANI — Toplu Silme" : @"Toplu Silme"
+                                            message:message
                                            delegate:self
                                   cancelButtonTitle:@"Vazgeç"
                                   otherButtonTitles:@"Sil", nil] autorelease];
@@ -374,6 +504,17 @@
             [self startDestinationOperation:@"copy"];
         } else if ([title isEqualToString:@"Taşı"]) {
             [self startDestinationOperation:@"move"];
+        } else if ([title isEqualToString:@"ZIP Oluştur"]) {
+            UIAlertView *alert =
+                [[[UIAlertView alloc] initWithTitle:@"ZIP Oluştur"
+                                            message:@"Arşiv adını yazın"
+                                           delegate:self
+                                  cancelButtonTitle:@"Vazgeç"
+                                  otherButtonTitles:@"Oluştur", nil] autorelease];
+            alert.alertViewStyle = UIAlertViewStylePlainTextInput;
+            [[alert textFieldAtIndex:0] setText:@"Archive.zip"];
+            alert.tag = 400;
+            [alert show];
         }
         return;
     }
@@ -416,6 +557,12 @@
     } else if ([title isEqualToString:@"Yenile"]) {
         [self reloadFiles];
         [self updateFooter];
+    } else if ([title isEqualToString:@"Üst Dizine Git"]) {
+        NSString *parentPath = [_path stringByDeletingLastPathComponent];
+        if ([parentPath length] == 0) parentPath = @"/";
+        FileBrowserViewController *browser =
+            [[[FileBrowserViewController alloc] initWithPath:parentPath] autorelease];
+        [self.navigationController pushViewController:browser animated:YES];
     }
 }
 
@@ -433,9 +580,10 @@
 }
 
 - (void)promptRename:(IP1FileItem *)item {
+    BOOL protectedArea = [[IP1FileManager sharedManager] isProtectedSystemDirectory:_path];
     UIAlertView *alert =
-        [[[UIAlertView alloc] initWithTitle:@"Yeniden Adlandır"
-                                    message:nil
+        [[[UIAlertView alloc] initWithTitle:protectedArea ? @"Sistem Öğesini Yeniden Adlandır" : @"Yeniden Adlandır"
+                                    message:protectedArea ? @"Dikkat: Sistem alanındaki bir öğenin adını değiştirmek cihazın çalışmasını etkileyebilir." : nil
                                    delegate:self
                           cancelButtonTitle:@"Vazgeç"
                           otherButtonTitles:@"Kaydet", nil] autorelease];
@@ -448,9 +596,13 @@
 }
 
 - (void)confirmDelete:(IP1FileItem *)item {
+    BOOL protectedArea = [[IP1FileManager sharedManager] isProtectedSystemDirectory:_path];
+    NSString *message = protectedArea
+        ? [NSString stringWithFormat:@"UYARI: %@ bir sistem alanı öğesidir. Silmek cihazın çalışmasını etkileyebilir. Yine de silinsin mi?", item.name]
+        : [NSString stringWithFormat:@"%@ silinsin mi?", item.name];
     UIAlertView *alert =
-        [[[UIAlertView alloc] initWithTitle:@"Sil"
-                                    message:[NSString stringWithFormat:@"%@ silinsin mi?", item.name]
+        [[[UIAlertView alloc] initWithTitle:protectedArea ? @"SİSTEM ALANI — Sil" : @"Sil"
+                                    message:message
                                    delegate:self
                           cancelButtonTitle:@"Vazgeç"
                           otherButtonTitles:@"Sil", nil] autorelease];
@@ -466,7 +618,53 @@
     NSError *error = nil;
     BOOL success = NO;
 
-    if (alertView.tag == 100) {
+    if (alertView.tag == 400) {
+        NSString *name = [[alertView textFieldAtIndex:0] text];
+        NSError *zipError = nil;
+
+        NSString *created =
+            [[ArchiveManager sharedManager] createZipNamed:name
+                                                 fromPaths:_selectedPaths
+                                               inDirectory:_path
+                                                     error:&zipError];
+
+        UIAlertView *resultAlert;
+
+        if (created) {
+            resultAlert =
+                [[[UIAlertView alloc] initWithTitle:@"ZIP Oluşturuldu"
+                                            message:[created lastPathComponent]
+                                           delegate:nil
+                                  cancelButtonTitle:@"Tamam"
+                                  otherButtonTitles:nil] autorelease];
+        } else {
+            resultAlert =
+                [[[UIAlertView alloc] initWithTitle:@"ZIP Oluşturulamadı"
+                                            message:[zipError localizedDescription]
+                                           delegate:nil
+                                  cancelButtonTitle:@"Tamam"
+                                  otherButtonTitles:nil] autorelease];
+        }
+
+        [resultAlert show];
+        [self cancelSelection];
+        [self reloadFiles];
+        [self updateFooter];
+        return;
+
+    } else if (alertView.tag == 201) {
+        [self presentDestinationPicker];
+        return;
+    } else if (alertView.tag == 300) {
+        IP1FileConflictPolicy policy =
+            (buttonIndex == 2) ? IP1FileConflictPolicyOverwrite : IP1FileConflictPolicyUnique;
+        [self performPendingTransferToPath:_pendingDestination conflictPolicy:policy];
+        return;
+    } else if (alertView.tag == 301) {
+        [self performPendingTransferToPath:_pendingDestination
+                           conflictPolicy:IP1FileConflictPolicyUnique];
+        return;
+    } else if (alertView.tag == 100) {
         NSString *name = [[alertView textFieldAtIndex:0] text];
         success = [[IP1FileManager sharedManager] createFolderNamed:name inDirectory:_path error:&error];
     } else if (alertView.tag == 101) {
@@ -516,6 +714,9 @@
                               @"Yenile",
                               nil] autorelease];
 
+    if (![_path isEqualToString:@"/"]) {
+        [sheet addButtonWithTitle:@"Üst Dizine Git"];
+    }
     [sheet addButtonWithTitle:@"Vazgeç"];
     sheet.cancelButtonIndex = sheet.numberOfButtons - 1;
     objc_setAssociatedObject(sheet, "IP1FileItem",
@@ -542,6 +743,7 @@
     [_searchBar release];
     [_selectedPaths release];
     [_pendingOperation release];
+    [_pendingDestination release];
     [super dealloc];
 }
 

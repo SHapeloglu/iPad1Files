@@ -62,6 +62,16 @@ static NSInteger IP1CompareFileItems(id obj1, id obj2, void *context) {
 }
 
 - (BOOL)renameItemAtPath:(NSString *)path toName:(NSString *)newName error:(NSError **)error {
+    if ([self isProtectedSystemRootPath:path]) {
+        if (error) {
+            *error = [NSError errorWithDomain:@"iPad1Files"
+                                         code:1101
+                                     userInfo:[NSDictionary dictionaryWithObject:@"Kritik sistem dizini yeniden adlandırılamaz."
+                                                                          forKey:NSLocalizedDescriptionKey]];
+        }
+        return NO;
+    }
+
     if ([newName length] == 0 || [newName rangeOfString:@"/"].location != NSNotFound) {
         if (error) {
             *error = [NSError errorWithDomain:@"iPad1Files"
@@ -77,7 +87,55 @@ static NSInteger IP1CompareFileItems(id obj1, id obj2, void *context) {
 }
 
 - (BOOL)deleteItemAtPath:(NSString *)path error:(NSError **)error {
+    if ([self isProtectedSystemRootPath:path]) {
+        if (error) {
+            *error = [NSError errorWithDomain:@"iPad1Files"
+                                         code:1102
+                                     userInfo:[NSDictionary dictionaryWithObject:@"Kritik sistem dizini silinemez."
+                                                                          forKey:NSLocalizedDescriptionKey]];
+        }
+        return NO;
+    }
     return [[NSFileManager defaultManager] removeItemAtPath:path error:error];
+}
+
+- (BOOL)isProtectedSystemRootPath:(NSString *)path {
+    if (![path length]) return NO;
+
+    NSString *p = [path stringByStandardizingPath];
+    NSArray *roots = [NSArray arrayWithObjects:
+        @"/", @"/System", @"/Library", @"/Applications",
+        @"/usr", @"/bin", @"/sbin", @"/etc", @"/private",
+        @"/var", nil];
+
+    for (NSString *root in roots) {
+        if ([p isEqualToString:root]) return YES;
+    }
+    return NO;
+}
+
+- (BOOL)isProtectedSystemDirectory:(NSString *)path {
+    if (![path length]) return NO;
+
+    NSString *p = [path stringByStandardizingPath];
+
+    if ([self isProtectedSystemRootPath:p]) return YES;
+
+    NSArray *prefixes = [NSArray arrayWithObjects:
+        @"/System/", @"/Library/", @"/Applications/",
+        @"/usr/", @"/bin/", @"/sbin/", @"/etc/",
+        @"/private/etc/", @"/private/var/db/", @"/private/var/stash/",
+        nil];
+
+    for (NSString *prefix in prefixes) {
+        if ([p hasPrefix:prefix]) return YES;
+    }
+    return NO;
+}
+
+- (BOOL)itemExistsAtDestinationForSource:(NSString *)source directory:(NSString *)directory {
+    NSString *target = [directory stringByAppendingPathComponent:[source lastPathComponent]];
+    return [[NSFileManager defaultManager] fileExistsAtPath:target];
 }
 
 - (NSString *)uniqueDestinationForSource:(NSString *)source directory:(NSString *)directory {
@@ -105,14 +163,99 @@ static NSInteger IP1CompareFileItems(id obj1, id obj2, void *context) {
     return candidate;
 }
 
+- (BOOL)performTransferFromPath:(NSString *)source
+                      toDirectory:(NSString *)destination
+                           moving:(BOOL)moving
+                   conflictPolicy:(IP1FileConflictPolicy)policy
+                            error:(NSError **)error {
+    NSFileManager *fm = [NSFileManager defaultManager];
+    NSString *target = [destination stringByAppendingPathComponent:[source lastPathComponent]];
+
+    if (policy == IP1FileConflictPolicyOverwrite &&
+        [self isProtectedSystemDirectory:destination]) {
+        if (error) {
+            *error = [NSError errorWithDomain:@"iPad1Files"
+                                         code:1103
+                                     userInfo:[NSDictionary dictionaryWithObject:@"Korumalı sistem alanında mevcut dosyanın üzerine yazılamaz."
+                                                                          forKey:NSLocalizedDescriptionKey]];
+        }
+        return NO;
+    }
+
+    if (policy == IP1FileConflictPolicyUnique) {
+        target = [self uniqueDestinationForSource:source directory:destination];
+        return moving
+            ? [fm moveItemAtPath:source toPath:target error:error]
+            : [fm copyItemAtPath:source toPath:target error:error];
+    }
+
+    if ([[source stringByStandardizingPath] isEqualToString:[target stringByStandardizingPath]]) {
+        return YES;
+    }
+
+    if (![fm fileExistsAtPath:target]) {
+        return moving
+            ? [fm moveItemAtPath:source toPath:target error:error]
+            : [fm copyItemAtPath:source toPath:target error:error];
+    }
+
+    NSString *backupSeed = [target stringByAppendingString:@".ipad1files-backup"];
+    NSString *backup = [self uniqueDestinationForSource:backupSeed directory:destination];
+
+    NSError *localError = nil;
+    if (![fm moveItemAtPath:target toPath:backup error:&localError]) {
+        if (error) *error = localError;
+        return NO;
+    }
+
+    BOOL ok = moving
+        ? [fm moveItemAtPath:source toPath:target error:&localError]
+        : [fm copyItemAtPath:source toPath:target error:&localError];
+
+    if (ok) {
+        [fm removeItemAtPath:backup error:nil];
+        return YES;
+    }
+
+    [fm moveItemAtPath:backup toPath:target error:nil];
+    if (error) *error = localError;
+    return NO;
+}
+
 - (BOOL)copyItemAtPath:(NSString *)source toDirectory:(NSString *)destination error:(NSError **)error {
-    NSString *target = [self uniqueDestinationForSource:source directory:destination];
-    return [[NSFileManager defaultManager] copyItemAtPath:source toPath:target error:error];
+    return [self copyItemAtPath:source
+                   toDirectory:destination
+                conflictPolicy:IP1FileConflictPolicyUnique
+                         error:error];
 }
 
 - (BOOL)moveItemAtPath:(NSString *)source toDirectory:(NSString *)destination error:(NSError **)error {
-    NSString *target = [self uniqueDestinationForSource:source directory:destination];
-    return [[NSFileManager defaultManager] moveItemAtPath:source toPath:target error:error];
+    return [self moveItemAtPath:source
+                   toDirectory:destination
+                conflictPolicy:IP1FileConflictPolicyUnique
+                         error:error];
+}
+
+- (BOOL)copyItemAtPath:(NSString *)source
+          toDirectory:(NSString *)destination
+       conflictPolicy:(IP1FileConflictPolicy)policy
+                error:(NSError **)error {
+    return [self performTransferFromPath:source
+                             toDirectory:destination
+                                  moving:NO
+                          conflictPolicy:policy
+                                   error:error];
+}
+
+- (BOOL)moveItemAtPath:(NSString *)source
+          toDirectory:(NSString *)destination
+       conflictPolicy:(IP1FileConflictPolicy)policy
+                error:(NSError **)error {
+    return [self performTransferFromPath:source
+                             toDirectory:destination
+                                  moving:YES
+                          conflictPolicy:policy
+                                   error:error];
 }
 
 - (NSArray *)filesWithExtension:(NSString *)extension underPath:(NSString *)rootPath {

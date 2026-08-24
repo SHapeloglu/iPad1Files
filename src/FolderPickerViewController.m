@@ -51,7 +51,7 @@
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     (void)tableView; (void)section;
-    return [_items count];
+    return [_items count] + ([_path isEqualToString:@"/"] ? 0 : 1);
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView
@@ -63,7 +63,14 @@
                                       reuseIdentifier:identifier] autorelease];
     }
 
-    IP1FileItem *item = [_items objectAtIndex:indexPath.row];
+    if (![_path isEqualToString:@"/"] && indexPath.row == 0) {
+        cell.textLabel.text = @"..  Üst Dizin";
+        cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+        return cell;
+    }
+
+    NSInteger itemIndex = indexPath.row - ([_path isEqualToString:@"/"] ? 0 : 1);
+    IP1FileItem *item = [_items objectAtIndex:itemIndex];
     cell.textLabel.text = item.name;
     cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
     return cell;
@@ -71,7 +78,19 @@
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
-    IP1FileItem *item = [_items objectAtIndex:indexPath.row];
+    if (![_path isEqualToString:@"/"] && indexPath.row == 0) {
+        NSString *parentPath = [_path stringByDeletingLastPathComponent];
+        if ([parentPath length] == 0) parentPath = @"/";
+        FolderPickerViewController *parent =
+            [[[FolderPickerViewController alloc] initWithPath:parentPath] autorelease];
+        parent.delegate = _delegate;
+        parent.actionTitle = _actionTitle;
+        [self.navigationController pushViewController:parent animated:YES];
+        return;
+    }
+
+    NSInteger itemIndex = indexPath.row - ([_path isEqualToString:@"/"] ? 0 : 1);
+    IP1FileItem *item = [_items objectAtIndex:itemIndex];
     FolderPickerViewController *child =
         [[[FolderPickerViewController alloc] initWithPath:item.path] autorelease];
     child.delegate = _delegate;
