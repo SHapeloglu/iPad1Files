@@ -1,30 +1,30 @@
-# iPad1Files — Authoritative Session / New Chat Handoff
+# iPad1Files — Belirleyici Oturum / Yeni Sohbet Devir Belgesi
 
-> Bu dosya repository için authoritative handoff belgesidir. Başka bir Markdown dosyasıyla çelişirse `SESSION.md` esas alınır.
+> Bu dosya repo için belirleyici devir belgesidir. Başka bir Markdown dosyasıyla çelişirse `SESSION.md` esas alınır.
 
-## Project
+## Proje
 
-Repository:
+Repo:
 ```text
 https://github.com/SHapeloglu/iPad1Files
 ```
 
-Branch:
+Dal:
 ```text
 main
 ```
 
-Validated source commit before this docs update:
+Bu doküman güncellemesinden önce doğrulanan kaynak commit'i:
 ```text
 3c5bce9 Add safe ZIP archive support and file manager enhancements
 ```
 
-Local:
+Yerel klasör:
 ```text
 ~/projects/iPad1Files-v1.0.0-beta1
 ```
 
-## Hard constraints
+## Kesin kısıtlar
 
 ```text
 iPad 1
@@ -36,31 +36,31 @@ Theos
 non-ARC / MRC
 ```
 
-No Swift, no modern-only iOS APIs, no ARC migration. Physical device behavior is final authority.
+Swift yok, yalnızca yeni iOS'ta olan API'ler yok, ARC'ye geçiş yok. Son söz fiziksel cihaz davranışınındır.
 
-## Physical device
+## Fiziksel cihaz
 
 ```text
 IP: 192.168.1.100
 SSH user: root
 ```
 
-Legacy SSH flags:
+Eski SSH parametreleri:
 ```text
 -o HostKeyAlgorithms=+ssh-rsa
 -o PubkeyAcceptedAlgorithms=+ssh-rsa
 ```
 
-## Mission
+## Görev
 
-iPad1Files is the shared filesystem backbone of the iPad1 app family.
+iPad1Files, iPad1 uygulama ailesinin ortak dosya sistemi omurgasıdır.
 
-Canonical root:
+Standart kök:
 ```text
 /var/mobile/Media/iPad1Files
 ```
 
-Children:
+Alt klasörler:
 ```text
 Downloads/
 Documents/
@@ -74,7 +74,8 @@ Temp/
 AppData/
 ```
 
-Owns:
+Sorumlu olduğu işler: gezgin; kopyala/taşı/yeniden adlandır/sil; çoklu seçim/tümünü seç; arama/favoriler/disk bilgisi; klasör seçici; yol gezinme; hafif önizleme/düzenleme; çakışmasız adlandırma; "Birlikte Aç" / URL devri; ZIP arşiv yönetimi.
+
 ```text
 browser
 copy/move/rename/delete
@@ -88,7 +89,8 @@ Open With / URL hand-off
 ZIP archive management
 ```
 
-Does not own:
+Sorumlu olmadığı işler: FTP/SFTP/SMB/WebDAV motorları; PDF görüntüleme/notlandırma/arama/yeniden akış motorları; OCR; AI/ML; arka planda dosya sistemi dizinleme.
+
 ```text
 FTP/SFTP/SMB/WebDAV engines
 PDF rendering/annotation/search/reflow engines
@@ -97,7 +99,7 @@ AI/ML
 background filesystem indexing
 ```
 
-## Companion integration
+## Yardımcı uygulama entegrasyonu
 
 FTPDownloader:
 ```text
@@ -110,50 +112,50 @@ PDF:
 ipad1pdf://open?path=<percent-encoded-absolute-path>
 ```
 
-Use the same physical file whenever possible.
+Mümkün olduğunca aynı fiziksel dosyayı kullan.
 
-## Current file-manager capabilities
+## Güncel dosya yöneticisi yetenekleri
 
-- shared storage bootstrap
-- browser
-- full path display
-- root navigation to `/`
-- copy/move/rename/delete
-- multi-select and `Tümünü Seç`
-- current-folder search
-- hidden-file toggle
-- favorites
-- disk footer
-- text/image preview
-- lightweight text edit/save in normal areas
-- create empty text file
-- sort by name/date/size
-- collision-safe `(2)`, `(3)` naming
-- normal overwrite/new-name/cancel behavior
-- protected system areas: no select-all, no overwrite, destructive warnings
-- critical root delete/rename protection
-- Open With registry
-- user-controlled Downloads classification
+- ortak depolamanın ilk kurulumu
+- gezgin
+- tam yol gösterimi
+- `/` köküne gitme
+- kopyala / taşı / yeniden adlandır / sil
+- çoklu seçim ve `Tümünü Seç`
+- bulunulan klasörde arama
+- gizli dosyaları göster/gizle
+- favoriler
+- disk bilgisi alt çubuğu
+- metin / görsel önizleme
+- normal alanlarda hafif metin düzenleme/kaydetme
+- boş metin dosyası oluşturma
+- ada / tarihe / boyuta göre sıralama
+- çakışmaya karşı güvenli `(2)`, `(3)` adlandırma
+- normal üzerine yaz / yeni ad / iptal davranışı
+- korumalı sistem alanları: tümünü seç yok, üzerine yazma yok, yıkıcı işlemde uyarı
+- kritik köklerde silme/yeniden adlandırma koruması
+- "Birlikte Aç" kaydı
+- kullanıcı kontrollü Downloads sınıflandırması
 
-## ZIP Phase 1 architecture
+## ZIP 1. aşama mimarisi
 
-Modules:
+Modüller:
 ```text
 ArchiveManager
 ArchiveViewController
 src/minizip/
 ```
 
-Implementation:
-- classic MiniZip bundled into app
+Uygulama:
+- klasik MiniZip uygulamaya gömülü
 - SDK `libz`
-- no runtime dependency on device `/usr/bin/zip`, `/usr/bin/unzip`, or `libzip`
-- 32 KB streaming buffer
-- entry-by-entry extraction
-- no whole ZIP in RAM
-- controlled autorelease pools
+- cihazdaki `/usr/bin/zip`, `/usr/bin/unzip` veya `libzip`'e çalışma zamanı bağımlılığı yok
+- 32 KB akış tamponu
+- öğe öğe çıkarma
+- ZIP'in tamamı RAM'de değil
+- kontrollü autorelease pool'lar
 
-Supports:
+Desteklenenler:
 ```text
 ZIP content listing
 Extract All -> here
@@ -162,60 +164,62 @@ multi-select -> Create ZIP
 reopen/extract ZIPs created by iPad1Files
 ```
 
-Safety:
-- ZIP Slip/path traversal check
-- absolute path rejection
-- symlink rejection
-- CRC validation
-- disk-space pre-check
-- collision-safe extraction root
-- encrypted ZIP unsupported
-- ZIP64 unsupported in Phase 1
+(ZIP içerik listeleme; buraya Tümünü Çıkar; mevcut Klasör Seçici ile başka klasöre Tümünü Çıkar; çoklu seçimden ZIP oluşturma; iPad1Files ile oluşturulan ZIP'leri yeniden açma/çıkarma)
 
-## Physical PASS
+Güvenlik:
+- ZIP Slip / yol geçişi kontrolü
+- mutlak yol reddi
+- symlink reddi
+- CRC doğrulaması
+- önceden boş disk alanı kontrolü
+- çakışmaya karşı güvenli çıkarma klasörü
+- şifreli ZIP desteklenmez
+- ZIP64 1. aşamada desteklenmez
 
-Verified on physical iPad 1:
-- clean armv7 build
-- package install
-- app launch
-- copy/move/delete
-- multi-select
+## Fiziksel cihazda GEÇTİ
+
+Fiziksel iPad 1'de doğrulananlar:
+- temiz armv7 derleme
+- paket kurulumu
+- uygulamanın açılması
+- kopyala / taşı / sil
+- çoklu seçim
 - `Tümünü Seç`
-- root navigation
-- protected-area select-all hidden
-- normal collision overwrite/new-name
-- protected destination overwrite absent
-- ZIP content screen
-- ZIP list
-- Extract All here
-- repeated extraction -> `(2)`
-- Extract All via Folder Picker
-- multi-select ZIP creation
-- created ZIP reopen
-- created ZIP extraction
-- core file-manager regression after ZIP integration
+- köke gitme
+- korumalı alanda "tümünü seç" gizli
+- normal çakışmada üzerine yaz / yeni ad
+- korumalı hedefte üzerine yazma seçeneği yok
+- ZIP içerik ekranı
+- ZIP listesi
+- buraya "Tümünü Çıkar"
+- tekrar çıkarma -> `(2)`
+- Klasör Seçici ile "Tümünü Çıkar"
+- çoklu seçimden ZIP oluşturma
+- oluşturulan ZIP'i yeniden açma
+- oluşturulan ZIP'i çıkarma
+- ZIP entegrasyonu sonrası çekirdek dosya yöneticisi regresyonu
 
-## Not yet proven
+## Henüz kanıtlanmayanlar
 
-- Turkish ZIP filenames/paths
-- corrupt ZIP
-- truncated ZIP
-- explicit malicious `../` ZIP
-- explicit absolute-path ZIP
-- explicit symlink ZIP
-- insufficient disk space
-- many small entries
-- large single entry
-- memory pressure
-- ZIP Phase 2: single-file extraction
-- progress UI
-- cancel support
-- encrypted ZIP
+- Türkçe ZIP dosya adları/yolları
+- bozuk ZIP
+- yarım kalmış ZIP
+- açıkça kötü niyetli `../` içeren ZIP
+- açıkça mutlak yollu ZIP
+- açıkça symlink içeren ZIP
+- yetersiz disk alanı
+- çok sayıda küçük öğe
+- tek büyük öğe
+- bellek baskısı
+- ZIP 2. aşama: tek dosya çıkarma
+- ilerleme arayüzü
+- iptal desteği
+- şifreli ZIP
 - ZIP64
-- large directory/image stress
-- PDFReader receiver absolute-path hand-off
+- büyük dizin / görsel yük testi
+- PDFReader alıcısına mutlak yol devri
 
-## Build
+## Derleme
 
 ```bash
 cd ~/projects/iPad1Files-v1.0.0-beta1
@@ -224,9 +228,9 @@ rm -rf .theos
 make package FINALPACKAGE=1
 ```
 
-## Git hygiene
+## Git temizliği
 
-Never commit:
+Asla commit etme:
 ```text
 .theos/
 packages/
@@ -236,22 +240,22 @@ obj/
 local helper patch scripts
 ```
 
-Before commit:
+Commit öncesi:
 ```bash
 git status -sb
 git diff --check
 ```
 
-## Immediate next action
+## Hemen yapılacak sonraki adım
 
-1. Read this file first.
-2. Verify:
+1. Önce bu dosyayı oku.
+2. Doğrula:
 ```bash
 cd ~/projects/iPad1Files-v1.0.0-beta1
 git status -sb
 git log -5 --oneline
 ```
-3. Run safe ZIP Phase 1 edge/security tests on physical iPad:
+3. Fiziksel iPad'de güvenli ZIP 1. aşama uç durum/güvenlik testlerini çalıştır:
 ```text
 Turkish filenames
 corrupt/truncated ZIP
@@ -263,26 +267,26 @@ large single entry
 insufficient disk space
 memory pressure
 ```
-4. Record actual PASS/FAIL in `SESSION.md` and `TESTING.md`.
-5. Only after Phase 1 is stable, begin Phase 2:
+4. Gerçek GEÇTİ/KALDI sonuçlarını `SESSION.md` ve `TESTING.md`'ye yaz.
+5. 2. aşamaya ancak 1. aşama kararlı olduktan sonra başla:
 ```text
 single-file extract
 progress UI
 cancel support
 ```
-6. Preserve existing file-manager regression behavior.
-7. Do not add FTP/SFTP/SMB/WebDAV engines to iPad1Files.
+6. Mevcut dosya yöneticisi regresyon davranışını koru.
+7. iPad1Files'a FTP/SFTP/SMB/WebDAV motorları ekleme.
 
-## New chat bootstrap
+## Yeni sohbet başlangıç metni
 
 ```text
 https://github.com/SHapeloglu/iPad1Files
 
 SESSION.md dosyasını oku.
-SESSION.md bu proje için authoritative handoff belgesidir.
+SESSION.md bu proje için belirleyici devir belgesidir.
 Başka bir MD dosyasıyla çelişirse SESSION.md'yi esas al.
-"Immediate next action" bölümünden devam et.
-Güncel main branch ve kaynak kodu da kontrol et.
+"Hemen yapılacak sonraki adım" bölümünden devam et.
+Güncel main dalını ve kaynak kodu da kontrol et.
 Mevcut mimari kararları bozma.
 iPad 1 / 256 MB RAM / iOS 5.1.1 / armv7 / Objective-C / Theos / non-ARC-MRC sınırlarından sapma.
 Fiziksel cihazda doğrulanmamış özellikleri çalışıyor kabul etme.

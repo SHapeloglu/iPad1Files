@@ -1,22 +1,22 @@
 # BACKLOG.md — iPad1Files
 
-Scheduled work: `TASKS.md` (ZIP Phase 1 edge/security tests → ZIP Phase 2 → remaining integration). This file holds unscheduled items. Respect `INTEGRATION.md`: iPad1Files is the shared filesystem backbone; FTP and PDF engines stay in their own apps.
+Planlı işler: `TASKS.md` (ZIP 1. aşama uç durum/güvenlik testleri → ZIP 2. aşama → kalan entegrasyon). Bu dosya henüz planlanmamış maddeleri tutar. `INTEGRATION.md`'ye uy: iPad1Files ortak dosya sistemi omurgasıdır; FTP ve PDF motorları kendi uygulamalarında kalır.
 
-## Archive formats (deferred in `ARCHITECTURE.md`)
+## Arşiv formatları (`ARCHITECTURE.md`'de ertelenenler)
 
-- ZIP64 (files > 4 GB / > 65 535 entries) — check MiniZip support and RAM cost first.
-- Encrypted ZIP (read) — password prompt, never cache the password.
-- TAR / TGZ / GZ — stream-based, no whole-archive buffering.
-- RAR / 7z — only if a small, iOS-5-compatible library exists and physical RAM profiling passes; otherwise reject.
+- ZIP64 (4 GB'tan büyük dosyalar / 65 535'ten fazla öğe) — önce MiniZip desteğini ve RAM maliyetini kontrol et.
+- Şifreli ZIP (okuma) — şifre sorulur, şifre asla önbelleğe alınmaz.
+- TAR / TGZ / GZ — akış tabanlı, arşivin tamamı tamponlanmaz.
+- RAR / 7z — yalnızca küçük, iOS 5 uyumlu bir kütüphane varsa ve fiziksel RAM profili geçerse; aksi halde reddet.
 
-## Unscheduled ideas
+## Planlanmamış fikirler
 
-- Storage usage view per canonical folder (`Downloads/ Documents/ PDFs/ Images/ Music/ Videos/ Archives/ Shared/ Temp/ AppData/`), computed incrementally.
-- `Temp/` auto-cleanup policy (age-based) with user confirmation.
-- Recent files list shared with sibling apps via a small plist (read-only for others).
-- Image thumbnail cache with a hard cap (memory-pressure aware).
-- iPad1VNC AppData integration details once VNC's beta4 lands.
+- Standart klasör başına (`Downloads/ Documents/ PDFs/ Images/ Music/ Videos/ Archives/ Shared/ Temp/ AppData/`) kademeli hesaplanan depolama kullanımı görünümü.
+- Kullanıcı onaylı, yaşa göre `Temp/` otomatik temizlik politikası.
+- Kardeş uygulamalarla küçük bir plist üzerinden paylaşılan son dosyalar listesi (diğerleri için salt okunur).
+- Kesin üst sınırı olan, bellek baskısına duyarlı görsel küçük resim önbelleği.
+- iPad1VNC'nin beta4 sürümü çıktığında AppData entegrasyonu ayrıntıları.
 
-## Out of scope
+## Kapsam dışı
 
-FTP/HTTP transfer engines (iPad1FTPDownloader), PDF rendering (iPad1PDFReader), media playback (iPad1Player), shell (iPad1Terminal).
+FTP/HTTP transfer motorları (iPad1FTPDownloader), PDF görüntüleme (iPad1PDFReader), medya oynatma (iPad1Player), kabuk (iPad1Terminal).

@@ -1,13 +1,13 @@
 # AGENTS.md
 
-Read first: SESSION.md, ARCHITECTURE.md, INTEGRATION.md, TESTING.md, TASKS.md, CLAUDE.md, README.md.
+Önce oku: SESSION.md, ARCHITECTURE.md, INTEGRATION.md, TESTING.md, TASKS.md, CLAUDE.md, README.md.
 
 Platform: iPad 1 / 256 MB / iOS 5.1.1 / armv7 / Theos / non-ARC.
 
-Do not duplicate specialist engines from iPad1FTPDownloader, iPad1PDFReader, iPad1VNC.
+iPad1FTPDownloader, iPad1PDFReader ve iPad1VNC'nin uzman motorlarını burada çoğaltma.
 
-New external app mappings belong in IP1AppRegistry.
+Yeni harici uygulama eşlemeleri `IP1AppRegistry` içine eklenir.
 
-Canonical root is stable. No automatic Downloads classification.
+Standart kök sabittir. Downloads klasöründe otomatik sınıflandırma yok.
 
-Do not commit `.theos/`, `packages/`, `*.deb`, `obj/`, `*.dSYM/`.
+`.theos/`, `packages/`, `*.deb`, `obj/`, `*.dSYM/` commit etme.

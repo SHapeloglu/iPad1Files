@@ -1,27 +1,27 @@
-# iPad1Files Architecture
+# iPad1Files Mimarisi
 
-iPad1Files monolitik FTP/PDF uygulaması değil; local filesystem + shared storage + hand-off + lightweight archive management katmanıdır.
+iPad1Files monolitik bir FTP/PDF uygulaması değildir; yerel dosya sistemi + ortak depolama + devir + hafif arşiv yönetimi katmanıdır.
 
 Platform:
 ```text
 iPad 1 / 256 MB / iOS 5.1.1 / armv7 / Theos / Objective-C / non-ARC-MRC
 ```
 
-Core:
-- `IP1SharedStorage`: canonical folders
-- `IP1FileManager`: local ops + system safety + collision naming
+Çekirdek:
+- `IP1SharedStorage`: standart klasörler
+- `IP1FileManager`: yerel işlemler + sistem güvenliği + çakışmasız adlandırma
 - `IP1FileItem`: metadata
-- `IP1FileTypeDetector`: type detection
-- `IP1FavoritesManager`: favorites
-- `IP1DiskInfo`: disk
-- `IP1AppRegistry`: extension -> app
-- `IP1AppLauncher`: URL hand-off
-- `FolderPickerViewController`: shared destination picker
-- `ArchiveManager`: ZIP list/extract/create
-- `ArchiveViewController`: ZIP UI
-- `src/minizip/`: bundled classic MiniZip
+- `IP1FileTypeDetector`: tür algılama
+- `IP1FavoritesManager`: favoriler
+- `IP1DiskInfo`: disk bilgisi
+- `IP1AppRegistry`: uzantı -> uygulama eşlemesi
+- `IP1AppLauncher`: URL ile devir
+- `FolderPickerViewController`: ortak hedef klasör seçici
+- `ArchiveManager`: ZIP listeleme / çıkarma / oluşturma
+- `ArchiveViewController`: ZIP arayüzü
+- `src/minizip/`: pakete gömülü klasik MiniZip
 
-Archive flow:
+Arşiv akışı:
 ```text
 FileBrowserViewController
         ↓ .zip
@@ -32,26 +32,26 @@ ArchiveManager
 MiniZip + libz
 ```
 
-Rules:
-- no whole ZIP in RAM
-- 32 KB streaming buffer
-- entry-by-entry extraction
-- path traversal protection
-- absolute path rejection
-- symlink rejection
-- CRC validation
-- disk-space pre-check
-- reuse existing Folder Picker
-- preserve `(2)` collision naming
+Kurallar:
+- ZIP'in tamamı RAM'e alınmaz
+- 32 KB akış tamponu
+- öğe öğe çıkarma
+- yol geçişi koruması
+- mutlak yol reddi
+- symlink reddi
+- CRC doğrulaması
+- önceden boş disk alanı kontrolü
+- mevcut Klasör Seçici yeniden kullanılır
+- `(2)` çakışma adlandırması korunur
 
-Phase 1:
+1. aşama:
 ```text
 ZIP list
 Extract All
 Create ZIP from multi-selection
 ```
 
-Deferred:
+Ertelenenler:
 ```text
 single-entry extract
 progress/cancel
@@ -61,13 +61,15 @@ TAR/TGZ/GZ
 RAR/7z
 ```
 
-Open With:
+(tek öğe çıkarma, ilerleme/iptal, ZIP64, şifreli ZIP, TAR/TGZ/GZ, RAR/7z)
+
+"Birlikte Aç":
 ```text
 .pdf -> iPad1PDFReader
 ipad1pdf://open?path=<percent-encoded-absolute-path>
 ```
 
-Out of scope:
+Kapsam dışı:
 ```text
 FTP/SFTP/SMB/WebDAV engines
 PDF engine features
@@ -75,3 +77,5 @@ OCR
 AI/ML
 background indexing
 ```
+
+(FTP/SFTP/SMB/WebDAV motorları, PDF motoru özellikleri, OCR, AI/ML, arka plan dizinleme)

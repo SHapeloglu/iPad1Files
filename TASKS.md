@@ -1,72 +1,72 @@
-# iPad1Files Tasks
+# iPad1Files Görevleri
 
-## Source
+## Kaynak kod
 
-- [x] shared root
-- [x] browser/file ops/multi-select/search/favorites/disk/preview
-- [x] collision-safe naming
-- [x] root navigation
-- [x] full path display
-- [x] select all
-- [x] protected-system safety policy
-- [x] sort by name/date/size
-- [x] new text file
-- [x] lightweight text editing
-- [x] app registry / Open With
-- [x] PDF absolute-path hand-off
-- [x] user-controlled Downloads classification
+- [x] ortak kök
+- [x] gezgin / dosya işlemleri / çoklu seçim / arama / favoriler / disk / önizleme
+- [x] çakışmaya karşı güvenli adlandırma
+- [x] köke gitme
+- [x] tam yol gösterimi
+- [x] tümünü seç
+- [x] korumalı sistem alanı güvenlik politikası
+- [x] ada / tarihe / boyuta göre sıralama
+- [x] yeni metin dosyası
+- [x] hafif metin düzenleme
+- [x] uygulama kaydı / "Birlikte Aç"
+- [x] PDF için mutlak yol devri
+- [x] kullanıcı kontrollü Downloads sınıflandırması
 - [x] ArchiveManager
 - [x] ArchiveViewController
-- [x] bundled MiniZip + libz
-- [x] ZIP list
-- [x] ZIP Extract All
-- [x] ZIP extract through existing Folder Picker
-- [x] multi-select ZIP creation
-- [x] ZIP Slip guard
-- [x] symlink rejection
-- [x] disk-space pre-check
+- [x] pakete gömülü MiniZip + libz
+- [x] ZIP listeleme
+- [x] ZIP "Tümünü Çıkar"
+- [x] mevcut Klasör Seçici ile ZIP çıkarma
+- [x] çoklu seçimden ZIP oluşturma
+- [x] ZIP Slip koruması
+- [x] symlink reddi
+- [x] önceden boş disk alanı kontrolü
 
-## Physical PASS
+## Fiziksel cihazda GEÇTİ
 
-- [x] clean armv7 build/install/launch
-- [x] copy/move/delete
-- [x] multi-select/select-all
-- [x] root navigation
-- [x] protected area select-all hidden
-- [x] protected destination overwrite absent
-- [x] normal collision overwrite/new-name
-- [x] ZIP content screen
-- [x] Extract All here
-- [x] repeated extraction -> `(2)`
-- [x] extract via Folder Picker
-- [x] multi-select ZIP create
-- [x] created ZIP reopen/extract
-- [x] core regression after ZIP integration
+- [x] temiz armv7 derleme / kurulum / açılış
+- [x] kopyala / taşı / sil
+- [x] çoklu seçim / tümünü seç
+- [x] köke gitme
+- [x] korumalı alanda "tümünü seç" gizli
+- [x] korumalı hedefte üzerine yazma seçeneği yok
+- [x] normal çakışmada üzerine yaz / yeni ad
+- [x] ZIP içerik ekranı
+- [x] buraya "Tümünü Çıkar"
+- [x] tekrar çıkarma -> `(2)`
+- [x] Klasör Seçici ile çıkarma
+- [x] çoklu seçimden ZIP oluşturma
+- [x] oluşturulan ZIP'i yeniden açma / çıkarma
+- [x] ZIP entegrasyonu sonrası çekirdek regresyon
 
-## ZIP Phase 1 edge/security tests
+## ZIP 1. aşama uç durum / güvenlik testleri
 
-- [ ] Turkish ZIP filenames
-- [ ] corrupt ZIP
-- [ ] truncated ZIP
-- [ ] `../` traversal ZIP
-- [ ] absolute-path ZIP
-- [ ] symlink ZIP
-- [ ] many small files
-- [ ] large single file
-- [ ] insufficient disk space
-- [ ] memory pressure
+- [ ] Türkçe ZIP dosya adları
+- [ ] bozuk ZIP
+- [ ] yarım kalmış (truncated) ZIP
+- [ ] `../` yol geçişi içeren ZIP
+- [ ] mutlak yollu ZIP
+- [ ] symlink içeren ZIP
+- [ ] çok sayıda küçük dosya
+- [ ] tek büyük dosya
+- [ ] yetersiz disk alanı
+- [ ] bellek baskısı
 
-## ZIP Phase 2
+## ZIP 2. aşama
 
-- [ ] single-file extract
-- [ ] progress UI
-- [ ] cancel support
+- [ ] tek dosya çıkarma
+- [ ] ilerleme arayüzü
+- [ ] iptal desteği
 
-## Remaining integration
+## Kalan entegrasyon
 
-- [ ] favorites persistence stress/regression
-- [ ] large directory/image memory
-- [ ] PDFReader missing fallback
-- [ ] PDFReader receiver absolute path
-- [ ] classification only after user choice
-- [ ] iPad1VNC AppData integration
+- [ ] favorilerin kalıcılığı için yük / regresyon testi
+- [ ] büyük dizin / görsel bellek kullanımı
+- [ ] PDFReader yokken yedek davranış
+- [ ] PDFReader alıcısının mutlak yolu
+- [ ] sınıflandırmanın yalnızca kullanıcı seçiminden sonra yapılması
+- [ ] iPad1VNC AppData entegrasyonu

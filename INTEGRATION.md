@@ -7,7 +7,7 @@ Platform:
 iPad 1 / 256 MB RAM / iOS 5.1.1 / armv7 / Theos / Objective-C / non-ARC-MRC
 ```
 
-Canonical root:
+Standart kök:
 ```text
 /var/mobile/Media/iPad1Files
 Downloads/ Documents/ PDFs/ Images/ Music/ Videos/ Archives/ Shared/ Temp/ AppData/
@@ -19,14 +19,14 @@ PDF:
 ipad1pdf://open?path=<percent-encoded-absolute-path>
 ```
 
-FTPDownloader default:
+FTPDownloader varsayılanı:
 ```text
 /var/mobile/Media/iPad1Files/Downloads
 ```
 
 FTPDownloader indirir; iPad1Files aynı fiziksel dosyayı yönetir.
 
-ZIP flow:
+ZIP akışı:
 ```text
 iPad1FTPDownloader
     ↓ Downloads/*.zip
@@ -35,20 +35,20 @@ iPad1Files
 ArchiveManager
 ```
 
-ZIP Phase 1:
-- content listing
-- extract here
-- extract to another folder
-- multi-select ZIP create
+ZIP 1. aşama:
+- içerik listeleme
+- buraya çıkar
+- başka klasöre çıkar
+- çoklu seçimden ZIP oluştur
 
-Engine:
+Motor:
 ```text
 bundled classic MiniZip + SDK libz
 ```
 
-No runtime dependency on device-installed `zip/unzip/libzip`.
+Cihazda kurulu `zip/unzip/libzip`'e çalışma zamanı bağımlılığı yoktur.
 
-Downloads classification is user-controlled only:
+Downloads sınıflandırması yalnızca kullanıcı kontrolündedir:
 ```text
 .pdf -> PDFs/
 .jpg/.png -> Images/
@@ -56,14 +56,16 @@ Downloads classification is user-controlled only:
 .zip -> Archives/
 ```
 
-System safety:
+Sistem güvenliği:
 ```text
 Normal area: overwrite / new-name / cancel
 Protected system area: no overwrite, no select-all, destructive warnings
 Critical roots: delete/rename blocked
 ```
 
-Out of scope:
+(Normal alan: üzerine yaz / yeni ad / iptal · Korumalı sistem alanı: üzerine yazma yok, tümünü seç yok, yıkıcı işlemlerde uyarı · Kritik kökler: silme/yeniden adlandırma engelli)
+
+Kapsam dışı:
 ```text
 FTP/SFTP/SMB/WebDAV engines
 PDF annotation/search/reflow/page editing
@@ -71,3 +73,5 @@ OCR
 AI/ML
 background indexing
 ```
+
+(FTP/SFTP/SMB/WebDAV motorları, PDF notlandırma/arama/yeniden akış/sayfa düzenleme, OCR, AI/ML, arka plan dizinleme)

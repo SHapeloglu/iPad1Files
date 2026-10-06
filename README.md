@@ -2,7 +2,7 @@
 
 iPad 1 / iOS 5.1.1 için ortak dosya sistemi omurgası ve hafif dosya/arşiv yöneticisi.
 
-Canonical root:
+Standart kök:
 ```text
 /var/mobile/Media/iPad1Files
 ```
@@ -18,32 +18,32 @@ Theos
 non-ARC / MRC
 ```
 
-Ecosystem:
+Uygulama ailesindeki yeri:
 ```text
 iPad1FTPDownloader -> Shared Downloads -> iPad1Files -> Open With -> iPad1PDFReader
 ```
 
-Current capabilities:
-- browser
-- copy/move/rename/delete
-- multi-select/select-all
-- search/favorites/disk
-- full path display
-- root navigation
-- text/image preview
-- lightweight text editing
-- sorting
-- collision-safe naming
-- protected-system safety
-- registry-based Open With
-- PDF absolute-path hand-off
-- user-controlled Downloads classification
-- ZIP content listing
-- ZIP Extract All
-- ZIP extraction via existing Folder Picker
-- multi-select ZIP creation
+Güncel yetenekler:
+- dosya gezgini
+- kopyala / taşı / yeniden adlandır / sil
+- çoklu seçim / tümünü seç
+- arama / favoriler / disk bilgisi
+- tam yol gösterimi
+- köke gitme
+- metin / görsel önizleme
+- hafif metin düzenleme
+- sıralama
+- çakışmaya karşı güvenli adlandırma
+- korumalı sistem alanı güvenliği
+- kayıt tabanlı "Birlikte Aç"
+- PDF için mutlak yol devri
+- kullanıcı kontrollü Downloads sınıflandırması
+- ZIP içerik listeleme
+- ZIP "Tümünü Çıkar"
+- mevcut Klasör Seçici ile ZIP çıkarma
+- çoklu seçimden ZIP oluşturma
 
-ZIP architecture:
+ZIP mimarisi:
 ```text
 FileBrowserViewController
         ↓
@@ -54,24 +54,26 @@ ArchiveManager
 bundled classic MiniZip + SDK libz
 ```
 
-Memory policy:
+Bellek politikası:
 ```text
 32 KB streaming buffer
 entry-by-entry extraction
 no whole ZIP in RAM
 ```
 
-Safety:
-- ZIP Slip/path traversal check
-- absolute path rejection
-- symlink rejection
-- CRC validation
-- disk-space pre-check
-- collision-safe extraction root
+Yani 32 KB'lık akış tamponu, öğe öğe çıkarma ve ZIP'in tamamı asla RAM'de değil.
 
-Phase 1 excludes encrypted ZIP and ZIP64.
+Güvenlik:
+- ZIP Slip / yol geçişi kontrolü
+- mutlak yol reddi
+- sembolik bağlantı (symlink) reddi
+- CRC doğrulaması
+- önceden boş disk alanı kontrolü
+- çakışmaya karşı güvenli çıkarma klasörü
 
-Build:
+1. aşama şifreli ZIP ve ZIP64'ü kapsamaz.
+
+Derleme:
 ```bash
 cd ~/projects/iPad1Files-v1.0.0-beta1
 make clean
@@ -79,7 +81,7 @@ rm -rf .theos
 make package FINALPACKAGE=1
 ```
 
-Device:
+Cihaz:
 ```text
 192.168.1.100
 ```
@@ -89,4 +91,4 @@ Repo:
 https://github.com/SHapeloglu/iPad1Files
 ```
 
-**Read `SESSION.md` first.** It is authoritative. Continue from `Immediate next action`.
+**Önce `SESSION.md`'yi oku.** Belirleyici olan odur. "Hemen yapılacak sonraki adım" bölümünden devam et.

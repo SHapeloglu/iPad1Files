@@ -1,16 +1,16 @@
 # CLAUDE.md
 
-Hard rules: iPad 1, 256 MB, iOS 5.1.1, armv7, Theos, Objective-C, non-ARC/MRC, no modern-only APIs.
+Kesin kurallar: iPad 1, 256 MB, iOS 5.1.1, armv7, Theos, Objective-C, non-ARC/MRC, yalnızca yeni iOS'ta olan API'ler yok.
 
-iPad1Files = local file management + shared storage + Open With.
+iPad1Files = yerel dosya yönetimi + ortak depolama + "Birlikte Aç".
 
-Canonical root:
+Standart kök:
 ```text
 /var/mobile/Media/iPad1Files
 ```
 
-`IP1AppRegistry` mapping authority; `IP1AppLauncher` absolute-path hand-off.
+Eşlemede yetkili `IP1AppRegistry`; mutlak yol devrini `IP1AppLauncher` yapar.
 
-Do not add FTP/SFTP/SMB/WebDAV engines, PDF engine features, OCR, AI/ML, background indexer.
+FTP/SFTP/SMB/WebDAV motorları, PDF motoru özellikleri, OCR, AI/ML veya arka plan dizinleyici ekleme.
 
-Read SESSION/ARCHITECTURE/INTEGRATION/TESTING/TASKS/AGENTS first.
+Önce SESSION / ARCHITECTURE / INTEGRATION / TESTING / TASKS / AGENTS dosyalarını oku.
